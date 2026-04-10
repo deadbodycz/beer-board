@@ -513,12 +513,16 @@
     <span class="drinks-add-unit">Kč</span>
     <button class="btn-add-drink" id="btnAddDrink">+ Přidat nápoj</button>
   </div>
-  <button class="btn-scan" id="btnScan">📷 Naskenovat ceník</button>
+  <div style="display:flex;gap:6px;margin-top:6px;">
+    <button class="btn-scan" id="btnScan" style="margin-top:0;flex:1;">📷 Vyfotit</button>
+    <button class="btn-scan" id="btnGallery" style="margin-top:0;flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);">🖼 Z galerie</button>
+  </div>
   <div class="apikey-row">
     <label for="inputApiKey">API klíč:</label>
     <input type="password" id="inputApiKey" placeholder="sk-ant-..." autocomplete="off" />
   </div>
   <input type="file" id="fileCapture" accept="image/*" capture="environment" style="display:none" />
+  <input type="file" id="fileGallery" accept="image/*" style="display:none" />
 </div>
 
 <main>
@@ -1005,12 +1009,20 @@ Vrať POUZE validní JSON pole, žádný jiný text:
   document.getElementById('inputApiKey').value = loadApiKey();
   document.getElementById('inputApiKey').addEventListener('change', e => saveApiKey(e.target.value));
 
-  // Camera / file scan
+  // Camera
   const fileCapture = document.getElementById('fileCapture');
   document.getElementById('btnScan').addEventListener('click', () => fileCapture.click());
   fileCapture.addEventListener('change', e => {
     const file = e.target.files[0];
     if (file) { analyzeMenuImage(file); fileCapture.value = ''; }
+  });
+
+  // Gallery
+  const fileGallery = document.getElementById('fileGallery');
+  document.getElementById('btnGallery').addEventListener('click', () => fileGallery.click());
+  fileGallery.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) { analyzeMenuImage(file); fileGallery.value = ''; }
   });
 
   // Import modal close
