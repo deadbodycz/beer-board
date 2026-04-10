@@ -687,13 +687,15 @@
   function updateSummary() {
     const container = document.getElementById('headerSummary');
     let totalCost = 0;
-    const chips = state.drinks.map(d => {
+    let totalDrinks = 0;
+    state.drinks.forEach(d => {
       const total = state.people.reduce((s, p) => s + getDrinkCount(p, d.id), 0);
+      totalDrinks += total;
       totalCost += total * d.price;
-      return `<div class="summary-chip"><strong>${total}</strong>\u00a0${escHtml(d.name)}</div>`;
     });
-    chips.push(`<div class="summary-chip cost">Útrata:\u00a0<strong>${formatKc(totalCost)}</strong></div>`);
-    container.innerHTML = chips.join('');
+    container.innerHTML = `
+      <div class="summary-chip">Celkem:\u00a0<strong>${totalDrinks}\u00a0${drinkPlural(totalDrinks)}</strong></div>
+      <div class="summary-chip cost">Útrata:\u00a0<strong>${formatKc(totalCost)}</strong></div>`;
   }
 
   function renderDrinksList() {
