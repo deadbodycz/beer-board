@@ -35,7 +35,16 @@
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
+    }
+    body.board-active {
       padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* ─── STICKY TOP ─────────────────────────────────────── */
+    .sticky-top {
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     /* ─── HEADER ─────────────────────────────────────────── */
@@ -43,9 +52,6 @@
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       padding: 12px 16px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
     }
     .header-top {
       display: flex;
@@ -91,6 +97,33 @@
     .summary-chip.cost { border-color: var(--accent); }
     .summary-chip.cost strong { color: var(--accent); }
 
+    /* ─── TAB NAV ────────────────────────────────────────── */
+    .tab-nav {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+    }
+    .tab {
+      flex: 1;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 11px 0;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    /* ─── TAB PANELS ─────────────────────────────────────── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: flex; flex-direction: column; flex: 1; }
+
     /* ─── DRINKS SECTION ─────────────────────────────────── */
     .drinks-section {
       background: var(--surface);
@@ -128,8 +161,7 @@
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      width: 24px;
-      height: 24px;
+      width: 24px; height: 24px;
       border-radius: 4px;
       display: flex;
       align-items: center;
@@ -201,8 +233,6 @@
       gap: 6px;
       align-items: center;
       margin-top: 6px;
-      padding-top: 8px;
-      border-top: 1px solid var(--border);
     }
     .apikey-row label {
       font-size: 0.75rem;
@@ -250,7 +280,6 @@
     .import-item-price { color: var(--text-muted); white-space: nowrap; }
     .import-item.checked { border-color: var(--accent); }
 
-    /* loading spinner */
     .spinner {
       width: 36px; height: 36px;
       border: 3px solid var(--border);
@@ -320,12 +349,7 @@
 
     /* ─── DRINK ROW ──────────────────────────────────────── */
     .drink-rows { display: flex; flex-direction: column; gap: 6px; }
-
-    .drink-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .drink-row { display: flex; align-items: center; gap: 8px; }
     .drink-row-name {
       flex: 0 0 90px;
       font-size: 0.82rem;
@@ -411,10 +435,11 @@
       background: var(--surface);
       border-top: 1px solid var(--border);
       padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-      display: flex;
+      display: none;
       gap: 10px;
       z-index: 10;
     }
+    body.board-active .add-bar { display: flex; }
     .add-bar input {
       flex: 1;
       min-width: 0;
@@ -492,52 +517,248 @@
       transition: background .12s;
     }
     .btn-confirm-reset:hover { background: #b91c1c; }
+
+    /* ─── HOSPODA SECTION ────────────────────────────────── */
+    .pubs-section { padding: 16px; flex: 1; }
+    .pubs-section-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    .pubs-add-form { display: flex; gap: 8px; margin-bottom: 16px; }
+    .pubs-add-form input {
+      flex: 1;
+      min-width: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 8px 14px;
+      font-size: 0.95rem;
+      transition: border-color .15s;
+    }
+    .pubs-add-form input::placeholder { color: var(--text-muted); }
+    .pubs-add-form input:focus { outline: none; border-color: var(--accent); }
+    .btn-add-pub {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .12s;
+    }
+    .btn-add-pub:hover { background: #d97706; }
+
+    .pub-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .pub-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .pub-card-name { flex: 1; font-size: 1rem; font-weight: 600; word-break: break-word; }
+    .btn-activate {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background .12s;
+    }
+    .btn-activate:hover { background: #d97706; }
+    .pub-card-body { padding: 10px 14px 14px; }
+    .pub-drinks-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+    .pub-drink-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 8px 5px 12px;
+      font-size: 0.82rem;
+    }
+    .pub-drink-name { flex: 1; font-weight: 500; }
+    .pub-drink-price { color: var(--text-muted); white-space: nowrap; font-size: 0.8rem; }
+    .pub-drink-del {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      width: 22px; height: 22px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+      transition: background .12s, color .12s;
+    }
+    .pub-drink-del:hover { background: var(--red-dim); color: var(--red); }
+    .pub-add-drink-form {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .pub-add-drink-form input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      padding: 5px 9px;
+      font-size: 0.82rem;
+      transition: border-color .15s;
+    }
+    .pub-add-drink-form input::placeholder { color: var(--text-muted); }
+    .pub-add-drink-form input:focus { outline: none; border-color: var(--accent); }
+    .pub-add-drink-name { flex: 1; min-width: 80px; }
+    .pub-add-drink-price { width: 62px; }
+    .pub-add-drink-unit { font-size: 0.78rem; color: var(--text-muted); }
+    .btn-pub-add-drink {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 7px;
+      padding: 5px 11px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-pub-add-drink:hover { border-color: var(--accent); color: var(--accent); }
+    .pub-empty {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-style: italic;
+      padding: 8px 0;
+    }
+
+    /* ─── SETTINGS SECTION ───────────────────────────────── */
+    .settings-section { padding: 16px; flex: 1; }
+    .settings-section-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    .settings-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .settings-card-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+    .settings-card-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
   </style>
 </head>
-<body>
+<body class="board-active">
 
-<header>
-  <div class="header-top">
-    <div class="app-title">🍺 <span>Beer</span> Board</div>
-    <button class="btn-reset" id="btnReset">Resetovat</button>
-  </div>
-  <div class="header-summary" id="headerSummary"></div>
-</header>
-
-<div class="drinks-section">
-  <div class="drinks-section-title">Nápoje</div>
-  <div class="drinks-list" id="drinksList"></div>
-  <div class="drinks-add-form">
-    <input type="text" id="inputNewDrinkName" placeholder="Název (Víno…)" maxlength="25" autocomplete="off" />
-    <input type="number" id="inputNewDrinkPrice" placeholder="55" min="0" step="1" />
-    <span class="drinks-add-unit">Kč</span>
-    <button class="btn-add-drink" id="btnAddDrink">+ Přidat nápoj</button>
-  </div>
-  <div style="display:flex;gap:6px;margin-top:6px;">
-    <button class="btn-scan" id="btnScan" style="margin-top:0;flex:1;">📷 Vyfotit</button>
-    <button class="btn-scan" id="btnGallery" style="margin-top:0;flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);">🖼 Z galerie</button>
-  </div>
-  <div class="apikey-row">
-    <label for="inputApiKey">API klíč:</label>
-    <input type="password" id="inputApiKey" placeholder="sk-ant-..." autocomplete="off" />
-  </div>
-  <input type="file" id="fileCapture" accept="image/*" capture="environment" style="display:none" />
-  <input type="file" id="fileGallery" accept="image/*" style="display:none" />
+<div class="sticky-top">
+  <header>
+    <div class="header-top">
+      <div class="app-title">🍺 <span>Beer</span> Board</div>
+      <button class="btn-reset" id="btnReset">Resetovat</button>
+    </div>
+    <div class="header-summary" id="headerSummary"></div>
+  </header>
+  <nav class="tab-nav">
+    <button class="tab active" data-tab="board">Board</button>
+    <button class="tab" data-tab="hospoda">Hospoda</button>
+    <button class="tab" data-tab="settings">Nastavení</button>
+  </nav>
 </div>
 
-<main>
-  <div id="emptyState" class="empty-state" style="display:none;">
-    <span class="emoji">🍻</span>
-    Nikdo tu ještě není.<br>Přidej první osobu níže.
+<!-- ── BOARD TAB ──────────────────────────────────────────── -->
+<div id="tab-board" class="tab-panel active">
+  <div class="drinks-section">
+    <div class="drinks-section-title">Nápoje</div>
+    <div class="drinks-list" id="drinksList"></div>
+    <div class="drinks-add-form">
+      <input type="text" id="inputNewDrinkName" placeholder="Název (Víno…)" maxlength="25" autocomplete="off" />
+      <input type="number" id="inputNewDrinkPrice" placeholder="55" min="0" step="1" />
+      <span class="drinks-add-unit">Kč</span>
+      <button class="btn-add-drink" id="btnAddDrink">+ Přidat nápoj</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:6px;">
+      <button class="btn-scan" id="btnScan" style="margin-top:0;flex:1;">📷 Vyfotit</button>
+      <button class="btn-scan" id="btnGallery" style="margin-top:0;flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);">🖼 Z galerie</button>
+    </div>
+    <input type="file" id="fileCapture" accept="image/*" capture="environment" style="display:none" />
+    <input type="file" id="fileGallery" accept="image/*" style="display:none" />
   </div>
-  <div class="people-grid" id="peopleGrid"></div>
-</main>
 
-<div class="add-bar">
-  <input type="text" id="inputName" placeholder="Jméno osoby…" maxlength="40" autocomplete="off" />
-  <button class="btn-add-person" id="btnAddPerson">Přidat</button>
+  <main>
+    <div id="emptyState" class="empty-state" style="display:none;">
+      <span class="emoji">🍻</span>
+      Nikdo tu ještě není.<br>Přidej první osobu níže.
+    </div>
+    <div class="people-grid" id="peopleGrid"></div>
+  </main>
+
+  <div class="add-bar">
+    <input type="text" id="inputName" placeholder="Jméno osoby…" maxlength="40" autocomplete="off" />
+    <button class="btn-add-person" id="btnAddPerson">Přidat</button>
+  </div>
 </div>
 
+<!-- ── HOSPODA TAB ────────────────────────────────────────── -->
+<div id="tab-hospoda" class="tab-panel">
+  <div class="pubs-section">
+    <div class="pubs-section-title">Moje hospody</div>
+    <div class="pubs-add-form">
+      <input type="text" id="inputPubName" placeholder="Název hospody…" maxlength="50" autocomplete="off" />
+      <button class="btn-add-pub" id="btnAddPub">+ Přidat</button>
+    </div>
+    <div id="pubsList"></div>
+  </div>
+</div>
+
+<!-- ── SETTINGS TAB ───────────────────────────────────────── -->
+<div id="tab-settings" class="tab-panel">
+  <div class="settings-section">
+    <div class="settings-section-title">Nastavení</div>
+    <div class="settings-card">
+      <div class="settings-card-title">Claude Vision API klíč</div>
+      <div class="settings-card-desc">Potřebný pro skenování fotky ceníku. Získáš ho na console.anthropic.com.</div>
+      <div class="apikey-row">
+        <label for="inputApiKey">API klíč:</label>
+        <input type="password" id="inputApiKey" placeholder="sk-ant-..." autocomplete="off" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODALS ─────────────────────────────────────────────── -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <h2 id="modalTitle">Smazat záznamy?</h2>
@@ -563,21 +784,16 @@
 <script>
   const KEY = 'beerboard_v2';
 
-  // ─── HELPERS (must come first) ────────────────────────────
+  // ─── HELPERS ─────────────────────────────────────────────
   function uid() {
     return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
-
   function escHtml(s) {
-    return String(s)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
-
   function formatKc(n) {
     return n.toLocaleString('cs-CZ') + '\u00a0Kč';
   }
-
   function drinkPlural(n) {
     if (n === 1) return 'nápoj';
     if (n >= 2 && n <= 4) return 'nápoje';
@@ -588,7 +804,8 @@
   function defaultState() {
     return {
       people: [],
-      drinks: [{ id: uid(), name: 'Pivo', price: 55 }]
+      drinks: [{ id: uid(), name: 'Pivo', price: 55 }],
+      pubs: []
     };
   }
 
@@ -597,7 +814,10 @@
       const raw = localStorage.getItem(KEY);
       if (raw) {
         const p = JSON.parse(raw);
-        if (p && Array.isArray(p.drinks) && Array.isArray(p.people)) return p;
+        if (p && Array.isArray(p.drinks) && Array.isArray(p.people)) {
+          if (!Array.isArray(p.pubs)) p.pubs = [];
+          return p;
+        }
       }
     } catch {}
     return defaultState();
@@ -613,85 +833,108 @@
   function getDrinkCount(person, drinkId) {
     return (person.drinks && person.drinks[drinkId]) || 0;
   }
-
   function personTotalDrinks(person) {
     if (!person.drinks) return 0;
     return Object.values(person.drinks).reduce((s, n) => s + n, 0);
   }
-
   function personTotalCost(person) {
     return state.drinks.reduce((s, d) => s + getDrinkCount(person, d.id) * d.price, 0);
   }
 
-  // ─── MUTATIONS ───────────────────────────────────────────
+  // ─── MUTATIONS — PEOPLE ──────────────────────────────────
   function addPerson(name) {
     name = name.trim();
     if (!name) return false;
     state.people.push({ id: uid(), name, drinks: {} });
-    saveState();
-    render();
-    return true;
+    saveState(); render(); return true;
   }
-
   function removePerson(id) {
     state.people = state.people.filter(p => p.id !== id);
-    saveState();
-    render();
+    saveState(); render();
   }
 
+  // ─── MUTATIONS — DRINKS ──────────────────────────────────
   function addDrink(name, price) {
     name = name.trim();
     if (!name) return false;
     const p = parseFloat(price);
     state.drinks.push({ id: uid(), name, price: isNaN(p) || p < 0 ? 0 : p });
-    saveState();
-    renderDrinksList();
-    render();
-    return true;
+    saveState(); renderDrinksList(); render(); return true;
   }
-
   function removeDrink(id) {
     state.drinks = state.drinks.filter(d => d.id !== id);
     state.people.forEach(p => { if (p.drinks) delete p.drinks[id]; });
-    saveState();
-    renderDrinksList();
-    render();
+    saveState(); renderDrinksList(); render();
   }
-
   function increment(personId, drinkId) {
     const p = state.people.find(p => p.id === personId);
     if (!p) return;
     if (!p.drinks) p.drinks = {};
     p.drinks[drinkId] = (p.drinks[drinkId] || 0) + 1;
-    saveState();
-    updateDrinkRow(personId, drinkId);
-    updateCardFooter(personId);
-    updateSummary();
+    saveState(); updateDrinkRow(personId, drinkId); updateCardFooter(personId); updateSummary();
   }
-
   function decrement(personId, drinkId) {
     const p = state.people.find(p => p.id === personId);
     if (!p || !p.drinks || !p.drinks[drinkId]) return;
     p.drinks[drinkId]--;
-    saveState();
-    updateDrinkRow(personId, drinkId);
-    updateCardFooter(personId);
-    updateSummary();
+    saveState(); updateDrinkRow(personId, drinkId); updateCardFooter(personId); updateSummary();
   }
-
   function resetAll() {
     const drinks = state.drinks;
+    const pubs = state.pubs;
     state = defaultState();
     state.drinks = drinks;
-    saveState();
-    render();
+    state.pubs = pubs;
+    saveState(); render();
+  }
+
+  // ─── MUTATIONS — PUBS ────────────────────────────────────
+  function addPub(name) {
+    name = name.trim();
+    if (!name) return false;
+    state.pubs.push({ id: uid(), name, drinks: [] });
+    saveState(); renderPubs(); return true;
+  }
+  function removePub(id) {
+    state.pubs = state.pubs.filter(p => p.id !== id);
+    saveState(); renderPubs();
+  }
+  function addDrinkToPub(pubId, name, price) {
+    name = name.trim();
+    if (!name) return false;
+    const pub = state.pubs.find(p => p.id === pubId);
+    if (!pub) return false;
+    const p = parseFloat(price);
+    pub.drinks.push({ id: uid(), name, price: isNaN(p) || p < 0 ? 0 : p });
+    saveState(); renderPubs(); return true;
+  }
+  function removeDrinkFromPub(pubId, drinkId) {
+    const pub = state.pubs.find(p => p.id === pubId);
+    if (!pub) return;
+    pub.drinks = pub.drinks.filter(d => d.id !== drinkId);
+    saveState(); renderPubs();
+  }
+  function activatePub(pubId) {
+    const pub = state.pubs.find(p => p.id === pubId);
+    if (!pub) return;
+    state.drinks = pub.drinks.map(d => ({ id: uid(), name: d.name, price: d.price }));
+    saveState(); render(); showTab('board');
+    showToast(`Hospoda „${pub.name}" aktivována`);
+  }
+
+  // ─── TOAST ───────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--accent);color:var(--text);padding:10px 18px;border-radius:10px;font-size:.88rem;font-weight:600;z-index:200;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.5);';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2800);
   }
 
   // ─── RENDER ──────────────────────────────────────────────
   function updateSummary() {
     const container = document.getElementById('headerSummary');
-    let totalCost = 0;
-    let totalDrinks = 0;
+    let totalCost = 0, totalDrinks = 0;
     state.drinks.forEach(d => {
       const total = state.people.reduce((s, p) => s + getDrinkCount(p, d.id), 0);
       totalDrinks += total;
@@ -725,7 +968,6 @@
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.id = person.id;
-
     const rowsHTML = state.drinks.length === 0
       ? '<div class="no-drinks-msg">Nejsou definovány žádné nápoje.</div>'
       : state.drinks.map(d => {
@@ -737,10 +979,8 @@
             <button class="btn-row-plus" aria-label="Přidat ${escHtml(d.name)}">+</button>
           </div>`;
         }).join('');
-
     const td = personTotalDrinks(person);
     const tc = personTotalCost(person);
-
     card.innerHTML = `
       <div class="card-header">
         <div class="person-name">${escHtml(person.name)}</div>
@@ -751,14 +991,12 @@
         <span class="total-count">${td}\u00a0${drinkPlural(td)}</span>
         <span class="total-cost">${formatKc(tc)}</span>
       </div>`;
-
     card.querySelector('.btn-delete').addEventListener('click', () => removePerson(person.id));
     card.querySelectorAll('.drink-row').forEach(row => {
       const did = row.dataset.drinkId;
       row.querySelector('.btn-row-plus').addEventListener('click', () => increment(person.id, did));
       row.querySelector('.btn-row-minus').addEventListener('click', () => decrement(person.id, did));
     });
-
     return card;
   }
 
@@ -770,13 +1008,11 @@
     const row = card.querySelector(`.drink-row[data-drink-id="${drinkId}"]`);
     if (!row) return;
     const count = getDrinkCount(person, drinkId);
-
     const el = row.querySelector('.drink-row-count');
     el.textContent = count;
     el.classList.remove('pulse');
     void el.offsetWidth;
     el.classList.add('pulse');
-
     row.querySelector('.btn-row-minus').disabled = count === 0;
   }
 
@@ -805,19 +1041,82 @@
     updateSummary();
   }
 
-  // ─── API KEY ─────────────────────────────────────────────
-  const API_KEY_STORAGE = 'beerboard_apikey';
-
-  function loadApiKey() {
-    return localStorage.getItem(API_KEY_STORAGE) || '';
+  function renderPubs() {
+    const container = document.getElementById('pubsList');
+    if (state.pubs.length === 0) {
+      container.innerHTML = '<div class="pub-empty">Zatím žádné hospody. Přidej první výše.</div>';
+      return;
+    }
+    container.innerHTML = '';
+    state.pubs.forEach(pub => {
+      const card = document.createElement('div');
+      card.className = 'pub-card';
+      card.dataset.pubId = pub.id;
+      const drinksHtml = pub.drinks.length === 0
+        ? '<div class="pub-empty">Žádné nápoje – přidej níže.</div>'
+        : pub.drinks.map(d =>
+            `<div class="pub-drink-item" data-drink-id="${d.id}">
+              <span class="pub-drink-name">${escHtml(d.name)}</span>
+              <span class="pub-drink-price">${d.price}\u00a0Kč</span>
+              <button class="pub-drink-del" aria-label="Odebrat ${escHtml(d.name)}">✕</button>
+            </div>`
+          ).join('');
+      card.innerHTML = `
+        <div class="pub-card-header">
+          <span class="pub-card-name">${escHtml(pub.name)}</span>
+          <button class="btn-activate" data-pub-id="${pub.id}">▶ Aktivovat</button>
+          <button class="btn-delete" aria-label="Smazat hospodu">🗑</button>
+        </div>
+        <div class="pub-card-body">
+          <div class="pub-drinks-list">${drinksHtml}</div>
+          <div class="pub-add-drink-form">
+            <input type="text" class="pub-add-drink-name" placeholder="Nápoj…" maxlength="25" autocomplete="off" />
+            <input type="number" class="pub-add-drink-price" placeholder="55" min="0" step="1" />
+            <span class="pub-add-drink-unit">Kč</span>
+            <button class="btn-pub-add-drink">+ Přidat</button>
+          </div>
+        </div>`;
+      card.querySelector('.btn-activate').addEventListener('click', () => activatePub(pub.id));
+      card.querySelector('.btn-delete').addEventListener('click', () => removePub(pub.id));
+      card.querySelectorAll('.pub-drink-del').forEach(btn => {
+        const did = btn.closest('.pub-drink-item').dataset.drinkId;
+        btn.addEventListener('click', () => removeDrinkFromPub(pub.id, did));
+      });
+      const nameInput  = card.querySelector('.pub-add-drink-name');
+      const priceInput = card.querySelector('.pub-add-drink-price');
+      const addBtn     = card.querySelector('.btn-pub-add-drink');
+      addBtn.addEventListener('click', () => {
+        if (addDrinkToPub(pub.id, nameInput.value, priceInput.value)) {
+          nameInput.value = ''; priceInput.value = ''; nameInput.focus();
+        }
+      });
+      nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') priceInput.focus(); });
+      priceInput.addEventListener('keydown', e => { if (e.key === 'Enter') addBtn.click(); });
+      container.appendChild(card);
+    });
   }
 
+  // ─── TAB SWITCHING ───────────────────────────────────────
+  function showTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+    document.body.classList.toggle('board-active', name === 'board');
+  }
+
+  document.querySelector('.tab-nav').addEventListener('click', e => {
+    const tab = e.target.closest('.tab');
+    if (tab) showTab(tab.dataset.tab);
+  });
+
+  // ─── API KEY ─────────────────────────────────────────────
+  const API_KEY_STORAGE = 'beerboard_apikey';
+  function loadApiKey() { return localStorage.getItem(API_KEY_STORAGE) || ''; }
   function saveApiKey(val) {
     if (val.trim()) localStorage.setItem(API_KEY_STORAGE, val.trim());
     else localStorage.removeItem(API_KEY_STORAGE);
   }
 
-  // ─── IMAGE → BASE64 (s kompresí) ─────────────────────────
+  // ─── IMAGE → BASE64 ──────────────────────────────────────
   function fileToBase64(file) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -831,36 +1130,27 @@
           else { width = Math.round(width * MAX / height); height = MAX; }
         }
         const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = width; canvas.height = height;
         canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-        resolve(dataUrl.split(',')[1]);
+        resolve(canvas.toDataURL('image/jpeg', 0.82).split(',')[1]);
       };
       img.onerror = reject;
       img.src = url;
     });
   }
 
-  // ─── CLAUDE VISION ANALYSIS ──────────────────────────────
+  // ─── CLAUDE VISION ───────────────────────────────────────
   async function analyzeMenuImage(file) {
     const apiKey = document.getElementById('inputApiKey').value.trim() || loadApiKey();
     if (!apiKey) {
-      showImportError('Zadej API klíč Claude.');
+      showImportError('Zadej API klíč Claude v sekci Nastavení.');
       return;
     }
     saveApiKey(apiKey);
-
     showImportLoading();
-
     let base64;
-    const mediaType = 'image/jpeg';
-    try {
-      base64 = await fileToBase64(file);
-    } catch {
-      showImportError('Nepodařilo se načíst obrázek.');
-      return;
-    }
+    try { base64 = await fileToBase64(file); }
+    catch { showImportError('Nepodařilo se načíst obrázek.'); return; }
 
     const prompt = `Na obrázku je tabule nebo jídelní lístek s nabídkou piv nebo nápojů.
 Extrahuj seznam nápojů. Pro každý nápoj urči:
@@ -885,41 +1175,29 @@ Vrať POUZE validní JSON pole, žádný jiný text:
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
           max_tokens: 1024,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-              { type: 'text', text: prompt }
-            ]
-          }]
+          messages: [{ role: 'user', content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+            { type: 'text', text: prompt }
+          ]}]
         })
       });
-    } catch {
-      showImportError('Nepodařilo se připojit k API. Zkontroluj připojení k internetu.');
-      return;
-    }
+    } catch { showImportError('Nepodařilo se připojit k API. Zkontroluj připojení k internetu.'); return; }
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      const msg = err?.error?.message || `Chyba ${response.status}`;
-      showImportError(`Chyba API: ${msg}`);
+      showImportError(`Chyba API: ${err?.error?.message || 'Chyba ' + response.status}`);
       return;
     }
 
     const data = await response.json();
     const text = data?.content?.[0]?.text || '';
-
     let items;
     try {
       const match = text.match(/\[[\s\S]*\]/);
       if (!match) throw new Error('no JSON');
       items = JSON.parse(match[0]);
-    } catch {
-      showImportError('Nepodařilo se zpracovat odpověď. Zkus znovu.');
-      return;
-    }
+    } catch { showImportError('Nepodařilo se zpracovat odpověď. Zkus znovu.'); return; }
 
-    // Flatten: one entry per price variant
     const flat = [];
     items.forEach(item => {
       const name = (item.name || '').trim();
@@ -932,22 +1210,13 @@ Vrať POUZE validní JSON pole, žádný jiný text:
       }
     });
 
-    if (flat.length === 0) {
-      showImportError('Žádné nápoje se nepodařilo rozpoznat. Zkus lepší fotografii.');
-      return;
-    }
-
+    if (flat.length === 0) { showImportError('Žádné nápoje se nepodařilo rozpoznat. Zkus lepší fotografii.'); return; }
     showImportResults(flat);
   }
 
   // ─── IMPORT MODAL UI ─────────────────────────────────────
-  function openImportOverlay() {
-    document.getElementById('importOverlay').classList.add('open');
-  }
-
-  function closeImportOverlay() {
-    document.getElementById('importOverlay').classList.remove('open');
-  }
+  function openImportOverlay()  { document.getElementById('importOverlay').classList.add('open'); }
+  function closeImportOverlay() { document.getElementById('importOverlay').classList.remove('open'); }
 
   function showImportLoading() {
     openImportOverlay();
@@ -975,9 +1244,7 @@ Vrať POUZE validní JSON pole, žádný jiný text:
         <input type="checkbox" checked data-idx="${i}" />
         <span class="import-item-name">${escHtml(item.name)}</span>
         <span class="import-item-price">${item.price}\u00a0Kč</span>`;
-      row.querySelector('input').addEventListener('change', e => {
-        row.classList.toggle('checked', e.target.checked);
-      });
+      row.querySelector('input').addEventListener('change', e => { row.classList.toggle('checked', e.target.checked); });
       list.appendChild(row);
     });
     document.getElementById('importBody').innerHTML = '';
@@ -996,35 +1263,25 @@ Vrať POUZE validní JSON pole, žádný jiný text:
   // ─── EVENTS ──────────────────────────────────────────────
   const inputNewName  = document.getElementById('inputNewDrinkName');
   const inputNewPrice = document.getElementById('inputNewDrinkPrice');
-
   document.getElementById('btnAddDrink').addEventListener('click', () => {
     if (addDrink(inputNewName.value, inputNewPrice.value)) {
-      inputNewName.value = '';
-      inputNewPrice.value = '';
-      inputNewName.focus();
+      inputNewName.value = ''; inputNewPrice.value = ''; inputNewName.focus();
     }
   });
   inputNewName.addEventListener('keydown', e => { if (e.key === 'Enter') inputNewPrice.focus(); });
-  inputNewPrice.addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('btnAddDrink').click();
-  });
+  inputNewPrice.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('btnAddDrink').click(); });
 
   const inputName = document.getElementById('inputName');
   document.getElementById('btnAddPerson').addEventListener('click', () => {
     if (addPerson(inputName.value)) { inputName.value = ''; inputName.focus(); }
   });
   inputName.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && inputName.value.trim()) {
-      addPerson(inputName.value);
-      inputName.value = '';
-    }
+    if (e.key === 'Enter' && inputName.value.trim()) { addPerson(inputName.value); inputName.value = ''; }
   });
 
-  // API key init
   document.getElementById('inputApiKey').value = loadApiKey();
   document.getElementById('inputApiKey').addEventListener('change', e => saveApiKey(e.target.value));
 
-  // Camera
   const fileCapture = document.getElementById('fileCapture');
   document.getElementById('btnScan').addEventListener('click', () => fileCapture.click());
   fileCapture.addEventListener('change', e => {
@@ -1032,7 +1289,6 @@ Vrať POUZE validní JSON pole, žádný jiný text:
     if (file) { analyzeMenuImage(file); fileCapture.value = ''; }
   });
 
-  // Gallery
   const fileGallery = document.getElementById('fileGallery');
   document.getElementById('btnGallery').addEventListener('click', () => fileGallery.click());
   fileGallery.addEventListener('change', e => {
@@ -1040,7 +1296,6 @@ Vrať POUZE validní JSON pole, žádný jiný text:
     if (file) { analyzeMenuImage(file); fileGallery.value = ''; }
   });
 
-  // Import modal close
   document.getElementById('btnImportCancel').addEventListener('click', closeImportOverlay);
   document.getElementById('importOverlay').addEventListener('click', e => {
     if (e.target === document.getElementById('importOverlay')) closeImportOverlay();
@@ -1049,15 +1304,19 @@ Vrať POUZE validní JSON pole, žádný jiný text:
   const modalOverlay = document.getElementById('modalOverlay');
   document.getElementById('btnReset').addEventListener('click', () => modalOverlay.classList.add('open'));
   document.getElementById('btnCancel').addEventListener('click', () => modalOverlay.classList.remove('open'));
-  document.getElementById('btnConfirmReset').addEventListener('click', () => {
-    modalOverlay.classList.remove('open');
-    resetAll();
+  document.getElementById('btnConfirmReset').addEventListener('click', () => { modalOverlay.classList.remove('open'); resetAll(); });
+  modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('open'); });
+
+  const inputPubName = document.getElementById('inputPubName');
+  document.getElementById('btnAddPub').addEventListener('click', () => {
+    if (addPub(inputPubName.value)) { inputPubName.value = ''; inputPubName.focus(); }
   });
-  modalOverlay.addEventListener('click', e => {
-    if (e.target === modalOverlay) modalOverlay.classList.remove('open');
+  inputPubName.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && inputPubName.value.trim()) { addPub(inputPubName.value); inputPubName.value = ''; }
   });
 
   render();
+  renderPubs();
 
   // ─── SERVICE WORKER ──────────────────────────────────────
   if ('serviceWorker' in navigator) {
