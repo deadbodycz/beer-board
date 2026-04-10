@@ -171,6 +171,48 @@
       transition: background .12s, color .12s;
     }
     .drink-chip-del:hover { background: var(--red-dim); color: var(--red); }
+    .drink-chip-edit {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      width: 24px; height: 24px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+      transition: background .12s, color .12s;
+    }
+    .drink-chip-edit:hover { background: var(--surface); color: var(--accent); }
+    .drink-chip-inputs { display: none; flex: 1; gap: 5px; align-items: center; }
+    .drink-chip-inputs input {
+      background: var(--bg);
+      border: 1px solid var(--accent);
+      border-radius: 5px;
+      color: var(--text);
+      padding: 3px 7px;
+      font-size: 0.82rem;
+    }
+    .drink-chip-inputs input:focus { outline: none; }
+    .drink-chip-input-name { flex: 1; min-width: 60px; }
+    .drink-chip-input-price { width: 56px; }
+    .drink-chip-save {
+      background: var(--green);
+      border: none;
+      color: #fff;
+      border-radius: 4px;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .drink-chip.editing .drink-chip-name,
+    .drink-chip.editing .drink-chip-price,
+    .drink-chip.editing .drink-chip-edit { display: none; }
+    .drink-chip.editing .drink-chip-inputs { display: flex; }
+    .drink-chip.editing .drink-chip-del { color: var(--text-muted); }
 
     .drinks-add-form {
       display: flex;
@@ -296,6 +338,25 @@
       color: var(--text-muted);
       padding: 4px 0 16px;
     }
+    .import-target {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .import-target select {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      padding: 5px 8px;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+    .import-target select:focus { outline: none; border-color: var(--accent); }
 
     /* ─── MAIN GRID ──────────────────────────────────────── */
     main { padding: 16px; flex: 1; }
@@ -866,6 +927,15 @@
     state.people.forEach(p => { if (p.drinks) delete p.drinks[id]; });
     saveState(); renderDrinksList(); render();
   }
+  function updateDrink(id, name, price) {
+    const d = state.drinks.find(d => d.id === id);
+    if (!d) return;
+    const trimmed = name.trim();
+    if (trimmed) d.name = trimmed;
+    const p = parseFloat(price);
+    if (!isNaN(p) && p >= 0) d.price = p;
+    saveState(); renderDrinksList(); render();
+  }
   function increment(personId, drinkId) {
     const p = state.people.find(p => p.id === personId);
     if (!p) return;
@@ -955,12 +1025,33 @@
       `<div class="drink-chip" data-drink-id="${d.id}">
         <span class="drink-chip-name">${escHtml(d.name)}</span>
         <span class="drink-chip-price">${d.price}\u00a0Kč</span>
+        <div class="drink-chip-inputs">
+          <input class="drink-chip-input-name" type="text" value="${escHtml(d.name)}" maxlength="25" />
+          <input class="drink-chip-input-price" type="number" value="${d.price}" min="0" step="1" />
+          <button class="drink-chip-save" aria-label="Uložit">✓</button>
+        </div>
+        <button class="drink-chip-edit" aria-label="Upravit ${escHtml(d.name)}">✏</button>
         <button class="drink-chip-del" aria-label="Odebrat ${escHtml(d.name)}">✕</button>
       </div>`
     ).join('');
-    list.querySelectorAll('.drink-chip-del').forEach(btn => {
-      const id = btn.closest('.drink-chip').dataset.drinkId;
-      btn.addEventListener('click', () => removeDrink(id));
+    list.querySelectorAll('.drink-chip').forEach(chip => {
+      const id = chip.dataset.drinkId;
+      chip.querySelector('.drink-chip-del').addEventListener('click', () => {
+        if (chip.classList.contains('editing')) { chip.classList.remove('editing'); return; }
+        removeDrink(id);
+      });
+      chip.querySelector('.drink-chip-edit').addEventListener('click', () => {
+        chip.classList.add('editing');
+        chip.querySelector('.drink-chip-input-name').focus();
+      });
+      const saveEdit = () => {
+        const name = chip.querySelector('.drink-chip-input-name').value;
+        const price = chip.querySelector('.drink-chip-input-price').value;
+        updateDrink(id, name, price);
+      };
+      chip.querySelector('.drink-chip-save').addEventListener('click', saveEdit);
+      chip.querySelector('.drink-chip-input-price').addEventListener('keydown', e => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') chip.classList.remove('editing'); });
+      chip.querySelector('.drink-chip-input-name').addEventListener('keydown', e => { if (e.key === 'Enter') chip.querySelector('.drink-chip-input-price').focus(); if (e.key === 'Escape') chip.classList.remove('editing'); });
     });
   }
 
@@ -1247,16 +1338,39 @@ Vrať POUZE validní JSON pole, žádný jiný text:
       row.querySelector('input').addEventListener('change', e => { row.classList.toggle('checked', e.target.checked); });
       list.appendChild(row);
     });
-    document.getElementById('importBody').innerHTML = '';
-    document.getElementById('importBody').appendChild(list);
+
+    // Výběr cíle: Board nebo Hospoda
+    const targetDiv = document.createElement('div');
+    targetDiv.className = 'import-target';
+    const pubOptions = state.pubs.map(p => `<option value="pub:${p.id}">🍺 ${escHtml(p.name)}</option>`).join('');
+    targetDiv.innerHTML = `<span>Uložit do:</span>
+      <select id="importTarget">
+        <option value="board">📋 Board</option>
+        ${pubOptions}
+      </select>`;
+
+    const body = document.getElementById('importBody');
+    body.innerHTML = '';
+    body.appendChild(list);
+    body.appendChild(targetDiv);
     document.getElementById('importActions').style.display = 'flex';
     document.getElementById('btnImportConfirm').style.display = '';
     document.getElementById('btnImportConfirm').onclick = () => {
+      const target = document.getElementById('importTarget').value;
       list.querySelectorAll('input[type=checkbox]:checked').forEach(cb => {
         const item = items[parseInt(cb.dataset.idx)];
-        addDrink(item.name, item.price);
+        if (target === 'board') {
+          addDrink(item.name, item.price);
+        } else {
+          const pubId = target.replace('pub:', '');
+          addDrinkToPub(pubId, item.name, item.price);
+        }
       });
       closeImportOverlay();
+      if (target !== 'board') {
+        const pub = state.pubs.find(p => p.id === target.replace('pub:', ''));
+        if (pub) showToast(`Nápoje přidány do hospody „${pub.name}"`);
+      }
     };
   }
 
