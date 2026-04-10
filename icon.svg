@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1e1e2e"/>
+  <!-- Mug body -->
+  <rect x="110" y="160" width="210" height="230" rx="16" fill="#f59e0b"/>
+  <!-- Foam -->
+  <ellipse cx="150" cy="160" rx="30" ry="18" fill="#fffbe6"/>
+  <ellipse cx="185" cy="152" rx="36" ry="22" fill="#fffbe6"/>
+  <ellipse cx="225" cy="156" rx="34" ry="20" fill="#fffbe6"/>
+  <ellipse cx="265" cy="158" rx="28" ry="18" fill="#fffbe6"/>
+  <rect x="110" y="160" width="210" height="22" fill="#fffbe6"/>
+  <!-- Bubbles -->
+  <circle cx="170" cy="280" r="8" fill="#fbbf24" opacity="0.5"/>
+  <circle cx="210" cy="320" r="6" fill="#fbbf24" opacity="0.4"/>
+  <circle cx="250" cy="270" r="9" fill="#fbbf24" opacity="0.45"/>
+  <!-- Handle -->
+  <path d="M320 205 Q400 205 400 275 Q400 345 320 345" fill="none" stroke="#f59e0b" stroke-width="32" stroke-linecap="round"/>
+</svg>

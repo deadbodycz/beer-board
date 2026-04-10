@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Beer Board</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#f59e0b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Beer Board" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f0f13;
+      --surface:   #1e1e2e;
+      --surface2:  #2a2a3e;
+      --border:    #3a3a5c;
+      --text:      #e2e8f0;
+      --text-muted:#8892a4;
+      --accent:    #f59e0b;
+      --green:     #22c55e;
+      --red:       #ef4444;
+      --red-dim:   #7f1d1d;
+      --radius:    14px;
+      --shadow:    0 4px 24px rgba(0,0,0,.45);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* ─── HEADER ─────────────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .app-title { font-size: 1.3rem; font-weight: 700; }
+    .app-title span { color: var(--accent); }
+
+    .btn-reset {
+      background: var(--red-dim);
+      color: var(--red);
+      border: 1px solid var(--red);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .btn-reset:hover { background: var(--red); color: #fff; }
+
+    .header-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 5px;
+    }
+    .summary-chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .summary-chip strong { color: var(--text); font-weight: 600; }
+    .summary-chip.cost { border-color: var(--accent); }
+    .summary-chip.cost strong { color: var(--accent); }
+
+    /* ─── DRINKS SECTION ─────────────────────────────────── */
+    .drinks-section {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+    }
+    .drinks-section-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .drinks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 8px;
+    }
+    .drink-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 8px 6px 12px;
+      font-size: 0.82rem;
+    }
+    .drink-chip-name { font-weight: 600; flex: 1; }
+    .drink-chip-price { color: var(--text-muted); white-space: nowrap; }
+    .drink-chip-del {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+      transition: background .12s, color .12s;
+    }
+    .drink-chip-del:hover { background: var(--red-dim); color: var(--red); }
+
+    .drinks-add-form {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .drinks-add-form input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 0.88rem;
+      transition: border-color .15s;
+    }
+    .drinks-add-form input::placeholder { color: var(--text-muted); }
+    .drinks-add-form input:focus { outline: none; border-color: var(--accent); }
+    #inputNewDrinkName  { flex: 1; min-width: 90px; }
+    #inputNewDrinkPrice { width: 68px; }
+    .drinks-add-unit { font-size: 0.8rem; color: var(--text-muted); }
+    .btn-add-drink {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 13px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-add-drink:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ─── MAIN GRID ──────────────────────────────────────── */
+    main { padding: 16px; flex: 1; }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      margin-top: 60px;
+      font-size: 1rem;
+    }
+    .empty-state .emoji { font-size: 3rem; display: block; margin-bottom: 12px; }
+
+    .people-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 560px)  { .people-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 900px)  { .people-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1200px) { .people-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    /* ─── CARD ───────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 14px 12px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color .15s;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .person-name { font-size: 1.05rem; font-weight: 600; word-break: break-word; }
+    .btn-delete {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 3px 5px;
+      border-radius: 6px;
+      font-size: 1rem;
+      flex-shrink: 0;
+      transition: color .15s, background .15s;
+    }
+    .btn-delete:hover { color: var(--red); background: var(--red-dim); }
+
+    /* ─── DRINK ROW ──────────────────────────────────────── */
+    .drink-rows { display: flex; flex-direction: column; gap: 6px; }
+
+    .drink-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .drink-row-name {
+      flex: 0 0 90px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .drink-row-count {
+      flex: 0 0 30px;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      display: inline-block;
+    }
+    .drink-row-count.pulse { animation: pulse .18s ease-out; }
+    @keyframes pulse {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+    .btn-row-minus {
+      flex: 0 0 36px;
+      height: 36px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .1s, color .1s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-row-minus:hover { background: var(--border); color: var(--text); }
+    .btn-row-minus:disabled { opacity: .3; cursor: default; }
+    .btn-row-plus {
+      flex: 1;
+      min-width: 0;
+      height: 48px;
+      background: var(--green);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1.6rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .1s, transform .08s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-row-plus:hover { background: #16a34a; }
+    .btn-row-plus:active { transform: scale(.95); }
+
+    .no-drinks-msg {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 8px 0;
+      font-style: italic;
+    }
+
+    /* ─── CARD FOOTER ────────────────────────────────────── */
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .card-footer .total-cost { font-weight: 600; color: var(--text); }
+
+    /* ─── ADD BAR ─────────────────────────────────────────── */
+    .add-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+    }
+    .add-bar input {
+      flex: 1;
+      min-width: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      padding: 0 16px;
+      font-size: 1rem;
+      height: 50px;
+      transition: border-color .15s;
+    }
+    .add-bar input::placeholder { color: var(--text-muted); }
+    .add-bar input:focus { outline: none; border-color: var(--accent); }
+    .btn-add-person {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      padding: 0 20px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      height: 50px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-add-person:hover { background: #d97706; }
+
+    /* ─── MODAL ──────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.72);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 26px 22px 18px;
+      max-width: 340px;
+      width: 100%;
+      box-shadow: var(--shadow);
+    }
+    .modal h2 { font-size: 1.1rem; margin-bottom: 10px; }
+    .modal p  { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-cancel {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 9px 16px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .btn-cancel:hover { background: var(--border); }
+    .btn-confirm-reset {
+      background: var(--red);
+      border: none;
+      color: #fff;
+      border-radius: 10px;
+      padding: 9px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .btn-confirm-reset:hover { background: #b91c1c; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="app-title">🍺 <span>Beer</span> Board</div>
+    <button class="btn-reset" id="btnReset">Resetovat</button>
+  </div>
+  <div class="header-summary" id="headerSummary"></div>
+</header>
+
+<div class="drinks-section">
+  <div class="drinks-section-title">Nápoje</div>
+  <div class="drinks-list" id="drinksList"></div>
+  <div class="drinks-add-form">
+    <input type="text" id="inputNewDrinkName" placeholder="Název (Víno…)" maxlength="25" autocomplete="off" />
+    <input type="number" id="inputNewDrinkPrice" placeholder="55" min="0" step="1" />
+    <span class="drinks-add-unit">Kč</span>
+    <button class="btn-add-drink" id="btnAddDrink">+ Přidat nápoj</button>
+  </div>
+</div>
+
+<main>
+  <div id="emptyState" class="empty-state" style="display:none;">
+    <span class="emoji">🍻</span>
+    Nikdo tu ještě není.<br>Přidej první osobu níže.
+  </div>
+  <div class="people-grid" id="peopleGrid"></div>
+</main>
+
+<div class="add-bar">
+  <input type="text" id="inputName" placeholder="Jméno osoby…" maxlength="40" autocomplete="off" />
+  <button class="btn-add-person" id="btnAddPerson">Přidat</button>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle">Smazat záznamy?</h2>
+    <p>Tato akce vymaže všechny osoby a jejich počty nápojů. Typy nápojů zůstanou. Nelze vrátit zpět.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btnCancel">Zrušit</button>
+      <button class="btn-confirm-reset" id="btnConfirmReset">Smazat vše</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const KEY = 'beerboard_v2';
+
+  // ─── HELPERS (must come first) ────────────────────────────
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatKc(n) {
+    return n.toLocaleString('cs-CZ') + '\u00a0Kč';
+  }
+
+  function drinkPlural(n) {
+    if (n === 1) return 'nápoj';
+    if (n >= 2 && n <= 4) return 'nápoje';
+    return 'nápojů';
+  }
+
+  // ─── STATE ───────────────────────────────────────────────
+  function defaultState() {
+    return {
+      people: [],
+      drinks: [{ id: uid(), name: 'Pivo', price: 55 }]
+    };
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p && Array.isArray(p.drinks) && Array.isArray(p.people)) return p;
+      }
+    } catch {}
+    return defaultState();
+  }
+
+  function saveState() {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }
+
+  let state = loadState();
+
+  // ─── COMPUTED ────────────────────────────────────────────
+  function getDrinkCount(person, drinkId) {
+    return (person.drinks && person.drinks[drinkId]) || 0;
+  }
+
+  function personTotalDrinks(person) {
+    if (!person.drinks) return 0;
+    return Object.values(person.drinks).reduce((s, n) => s + n, 0);
+  }
+
+  function personTotalCost(person) {
+    return state.drinks.reduce((s, d) => s + getDrinkCount(person, d.id) * d.price, 0);
+  }
+
+  // ─── MUTATIONS ───────────────────────────────────────────
+  function addPerson(name) {
+    name = name.trim();
+    if (!name) return false;
+    state.people.push({ id: uid(), name, drinks: {} });
+    saveState();
+    render();
+    return true;
+  }
+
+  function removePerson(id) {
+    state.people = state.people.filter(p => p.id !== id);
+    saveState();
+    render();
+  }
+
+  function addDrink(name, price) {
+    name = name.trim();
+    if (!name) return false;
+    const p = parseFloat(price);
+    state.drinks.push({ id: uid(), name, price: isNaN(p) || p < 0 ? 0 : p });
+    saveState();
+    renderDrinksList();
+    render();
+    return true;
+  }
+
+  function removeDrink(id) {
+    state.drinks = state.drinks.filter(d => d.id !== id);
+    state.people.forEach(p => { if (p.drinks) delete p.drinks[id]; });
+    saveState();
+    renderDrinksList();
+    render();
+  }
+
+  function increment(personId, drinkId) {
+    const p = state.people.find(p => p.id === personId);
+    if (!p) return;
+    if (!p.drinks) p.drinks = {};
+    p.drinks[drinkId] = (p.drinks[drinkId] || 0) + 1;
+    saveState();
+    updateDrinkRow(personId, drinkId);
+    updateCardFooter(personId);
+    updateSummary();
+  }
+
+  function decrement(personId, drinkId) {
+    const p = state.people.find(p => p.id === personId);
+    if (!p || !p.drinks || !p.drinks[drinkId]) return;
+    p.drinks[drinkId]--;
+    saveState();
+    updateDrinkRow(personId, drinkId);
+    updateCardFooter(personId);
+    updateSummary();
+  }
+
+  function resetAll() {
+    const drinks = state.drinks;
+    state = defaultState();
+    state.drinks = drinks;
+    saveState();
+    render();
+  }
+
+  // ─── RENDER ──────────────────────────────────────────────
+  function updateSummary() {
+    const container = document.getElementById('headerSummary');
+    let totalCost = 0;
+    const chips = state.drinks.map(d => {
+      const total = state.people.reduce((s, p) => s + getDrinkCount(p, d.id), 0);
+      totalCost += total * d.price;
+      return `<div class="summary-chip"><strong>${total}</strong>\u00a0${escHtml(d.name)}</div>`;
+    });
+    chips.push(`<div class="summary-chip cost">Útrata:\u00a0<strong>${formatKc(totalCost)}</strong></div>`);
+    container.innerHTML = chips.join('');
+  }
+
+  function renderDrinksList() {
+    const list = document.getElementById('drinksList');
+    if (state.drinks.length === 0) {
+      list.innerHTML = '<span style="font-size:.8rem;color:var(--text-muted)">Žádné nápoje – přidej první.</span>';
+      return;
+    }
+    list.innerHTML = state.drinks.map(d =>
+      `<div class="drink-chip" data-drink-id="${d.id}">
+        <span class="drink-chip-name">${escHtml(d.name)}</span>
+        <span class="drink-chip-price">${d.price}\u00a0Kč</span>
+        <button class="drink-chip-del" aria-label="Odebrat ${escHtml(d.name)}">✕</button>
+      </div>`
+    ).join('');
+    list.querySelectorAll('.drink-chip-del').forEach(btn => {
+      const id = btn.closest('.drink-chip').dataset.drinkId;
+      btn.addEventListener('click', () => removeDrink(id));
+    });
+  }
+
+  function buildCard(person) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.id = person.id;
+
+    const rowsHTML = state.drinks.length === 0
+      ? '<div class="no-drinks-msg">Nejsou definovány žádné nápoje.</div>'
+      : state.drinks.map(d => {
+          const count = getDrinkCount(person, d.id);
+          return `<div class="drink-row" data-drink-id="${d.id}">
+            <span class="drink-row-name" title="${escHtml(d.name)}">${escHtml(d.name)}</span>
+            <button class="btn-row-minus"${count === 0 ? ' disabled' : ''} aria-label="Odebrat ${escHtml(d.name)}">−</button>
+            <span class="drink-row-count">${count}</span>
+            <button class="btn-row-plus" aria-label="Přidat ${escHtml(d.name)}">+</button>
+          </div>`;
+        }).join('');
+
+    const td = personTotalDrinks(person);
+    const tc = personTotalCost(person);
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="person-name">${escHtml(person.name)}</div>
+        <button class="btn-delete" aria-label="Smazat ${escHtml(person.name)}">🗑</button>
+      </div>
+      <div class="drink-rows">${rowsHTML}</div>
+      <div class="card-footer">
+        <span class="total-count">${td}\u00a0${drinkPlural(td)}</span>
+        <span class="total-cost">${formatKc(tc)}</span>
+      </div>`;
+
+    card.querySelector('.btn-delete').addEventListener('click', () => removePerson(person.id));
+    card.querySelectorAll('.drink-row').forEach(row => {
+      const did = row.dataset.drinkId;
+      row.querySelector('.btn-row-plus').addEventListener('click', () => increment(person.id, did));
+      row.querySelector('.btn-row-minus').addEventListener('click', () => decrement(person.id, did));
+    });
+
+    return card;
+  }
+
+  function updateDrinkRow(personId, drinkId) {
+    const card = document.querySelector(`.card[data-id="${personId}"]`);
+    if (!card) return;
+    const person = state.people.find(p => p.id === personId);
+    if (!person) return;
+    const row = card.querySelector(`.drink-row[data-drink-id="${drinkId}"]`);
+    if (!row) return;
+    const count = getDrinkCount(person, drinkId);
+
+    const el = row.querySelector('.drink-row-count');
+    el.textContent = count;
+    el.classList.remove('pulse');
+    void el.offsetWidth;
+    el.classList.add('pulse');
+
+    row.querySelector('.btn-row-minus').disabled = count === 0;
+  }
+
+  function updateCardFooter(personId) {
+    const card = document.querySelector(`.card[data-id="${personId}"]`);
+    if (!card) return;
+    const person = state.people.find(p => p.id === personId);
+    if (!person) return;
+    const td = personTotalDrinks(person);
+    const tc = personTotalCost(person);
+    card.querySelector('.total-count').textContent = `${td}\u00a0${drinkPlural(td)}`;
+    card.querySelector('.total-cost').textContent = formatKc(tc);
+  }
+
+  function render() {
+    renderDrinksList();
+    const grid  = document.getElementById('peopleGrid');
+    const empty = document.getElementById('emptyState');
+    grid.innerHTML = '';
+    if (state.people.length === 0) {
+      empty.style.display = '';
+    } else {
+      empty.style.display = 'none';
+      state.people.forEach(p => grid.appendChild(buildCard(p)));
+    }
+    updateSummary();
+  }
+
+  // ─── EVENTS ──────────────────────────────────────────────
+  const inputNewName  = document.getElementById('inputNewDrinkName');
+  const inputNewPrice = document.getElementById('inputNewDrinkPrice');
+
+  document.getElementById('btnAddDrink').addEventListener('click', () => {
+    if (addDrink(inputNewName.value, inputNewPrice.value)) {
+      inputNewName.value = '';
+      inputNewPrice.value = '';
+      inputNewName.focus();
+    }
+  });
+  inputNewName.addEventListener('keydown', e => { if (e.key === 'Enter') inputNewPrice.focus(); });
+  inputNewPrice.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('btnAddDrink').click();
+  });
+
+  const inputName = document.getElementById('inputName');
+  document.getElementById('btnAddPerson').addEventListener('click', () => {
+    if (addPerson(inputName.value)) { inputName.value = ''; inputName.focus(); }
+  });
+  inputName.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && inputName.value.trim()) {
+      addPerson(inputName.value);
+      inputName.value = '';
+    }
+  });
+
+  const modalOverlay = document.getElementById('modalOverlay');
+  document.getElementById('btnReset').addEventListener('click', () => modalOverlay.classList.add('open'));
+  document.getElementById('btnCancel').addEventListener('click', () => modalOverlay.classList.remove('open'));
+  document.getElementById('btnConfirmReset').addEventListener('click', () => {
+    modalOverlay.classList.remove('open');
+    resetAll();
+  });
+  modalOverlay.addEventListener('click', e => {
+    if (e.target === modalOverlay) modalOverlay.classList.remove('open');
+  });
+
+  render();
+
+  // ─── SERVICE WORKER ──────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
