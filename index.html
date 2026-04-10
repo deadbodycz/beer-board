@@ -174,6 +174,100 @@
     }
     .btn-add-drink:hover { border-color: var(--accent); color: var(--accent); }
 
+    .btn-scan {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .12s;
+      width: 100%;
+      justify-content: center;
+      margin-top: 6px;
+    }
+    .btn-scan:hover { background: #d97706; }
+    .btn-scan:disabled { opacity: .5; cursor: default; }
+
+    /* ─── API KEY ────────────────────────────────────────── */
+    .apikey-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 6px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .apikey-row label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .apikey-row input {
+      flex: 1;
+      min-width: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 5px 9px;
+      font-size: 0.78rem;
+      font-family: monospace;
+      transition: border-color .15s;
+    }
+    .apikey-row input:focus { outline: none; border-color: var(--accent); }
+
+    /* ─── IMPORT MODAL ───────────────────────────────────── */
+    .import-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 55vh;
+      overflow-y: auto;
+      margin-bottom: 16px;
+    }
+    .import-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .import-item input[type=checkbox] { flex-shrink: 0; accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+    .import-item-name { flex: 1; font-weight: 600; }
+    .import-item-price { color: var(--text-muted); white-space: nowrap; }
+    .import-item.checked { border-color: var(--accent); }
+
+    /* loading spinner */
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 24px auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .import-status {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      padding: 4px 0 16px;
+    }
+
     /* ─── MAIN GRID ──────────────────────────────────────── */
     main { padding: 16px; flex: 1; }
 
@@ -419,6 +513,12 @@
     <span class="drinks-add-unit">Kč</span>
     <button class="btn-add-drink" id="btnAddDrink">+ Přidat nápoj</button>
   </div>
+  <button class="btn-scan" id="btnScan">📷 Naskenovat ceník</button>
+  <div class="apikey-row">
+    <label for="inputApiKey">API klíč:</label>
+    <input type="password" id="inputApiKey" placeholder="sk-ant-..." autocomplete="off" />
+  </div>
+  <input type="file" id="fileCapture" accept="image/*" capture="environment" style="display:none" />
 </div>
 
 <main>
@@ -441,6 +541,17 @@
     <div class="modal-actions">
       <button class="btn-cancel" id="btnCancel">Zrušit</button>
       <button class="btn-confirm-reset" id="btnConfirmReset">Smazat vše</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="importOverlay">
+  <div class="modal" role="dialog" aria-modal="true" style="max-width:420px;">
+    <h2 id="importTitle">Rozpoznané nápoje</h2>
+    <div id="importBody"></div>
+    <div class="modal-actions" id="importActions" style="display:none;">
+      <button class="btn-cancel" id="btnImportCancel">Zrušit</button>
+      <button class="btn-add-drink" id="btnImportConfirm" style="background:var(--accent);color:#000;border:none;padding:9px 18px;font-size:.9rem;">Přidat vybrané</button>
     </div>
   </div>
 </div>
@@ -688,6 +799,179 @@
     updateSummary();
   }
 
+  // ─── API KEY ─────────────────────────────────────────────
+  const API_KEY_STORAGE = 'beerboard_apikey';
+
+  function loadApiKey() {
+    return localStorage.getItem(API_KEY_STORAGE) || '';
+  }
+
+  function saveApiKey(val) {
+    if (val.trim()) localStorage.setItem(API_KEY_STORAGE, val.trim());
+    else localStorage.removeItem(API_KEY_STORAGE);
+  }
+
+  // ─── IMAGE → BASE64 ──────────────────────────────────────
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ─── CLAUDE VISION ANALYSIS ──────────────────────────────
+  async function analyzeMenuImage(file) {
+    const apiKey = document.getElementById('inputApiKey').value.trim() || loadApiKey();
+    if (!apiKey) {
+      showImportError('Zadej API klíč Claude.');
+      return;
+    }
+    saveApiKey(apiKey);
+
+    showImportLoading();
+
+    let base64, mediaType;
+    try {
+      base64 = await fileToBase64(file);
+      mediaType = file.type || 'image/jpeg';
+    } catch {
+      showImportError('Nepodařilo se načíst obrázek.');
+      return;
+    }
+
+    const prompt = `Na obrázku je tabule nebo jídelní lístek s nabídkou piv nebo nápojů.
+Extrahuj seznam nápojů. Pro každý nápoj urči:
+- název (krátký obchodní název, bez stupňovitosti a bez názvu pivovaru, max 20 znaků)
+- cena malého (0.3l nebo menší sklenice) - číslo v Kč nebo null
+- cena velkého (0.5l nebo větší sklenice) - číslo v Kč nebo null
+
+Pokud je jen jedna cena, dej ji do priceLarge.
+Vrať POUZE validní JSON pole, žádný jiný text:
+[{"name":"...", "priceSmall": číslo nebo null, "priceLarge": číslo nebo null}]`;
+
+    let response;
+    try {
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1024,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+              { type: 'text', text: prompt }
+            ]
+          }]
+        })
+      });
+    } catch {
+      showImportError('Nepodařilo se připojit k API. Zkontroluj připojení k internetu.');
+      return;
+    }
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      const msg = err?.error?.message || `Chyba ${response.status}`;
+      showImportError(`Chyba API: ${msg}`);
+      return;
+    }
+
+    const data = await response.json();
+    const text = data?.content?.[0]?.text || '';
+
+    let items;
+    try {
+      const match = text.match(/\[[\s\S]*\]/);
+      if (!match) throw new Error('no JSON');
+      items = JSON.parse(match[0]);
+    } catch {
+      showImportError('Nepodařilo se zpracovat odpověď. Zkus znovu.');
+      return;
+    }
+
+    // Flatten: one entry per price variant
+    const flat = [];
+    items.forEach(item => {
+      const name = (item.name || '').trim();
+      if (!name) return;
+      if (item.priceSmall != null && item.priceLarge != null) {
+        flat.push({ name: `${name} (m)`, price: Number(item.priceSmall) });
+        flat.push({ name: `${name} (v)`, price: Number(item.priceLarge) });
+      } else {
+        flat.push({ name, price: Number(item.priceLarge ?? item.priceSmall ?? 0) });
+      }
+    });
+
+    if (flat.length === 0) {
+      showImportError('Žádné nápoje se nepodařilo rozpoznat. Zkus lepší fotografii.');
+      return;
+    }
+
+    showImportResults(flat);
+  }
+
+  // ─── IMPORT MODAL UI ─────────────────────────────────────
+  function openImportOverlay() {
+    document.getElementById('importOverlay').classList.add('open');
+  }
+
+  function closeImportOverlay() {
+    document.getElementById('importOverlay').classList.remove('open');
+  }
+
+  function showImportLoading() {
+    openImportOverlay();
+    document.getElementById('importTitle').textContent = 'Analyzuji ceník…';
+    document.getElementById('importBody').innerHTML = '<div class="spinner"></div><div class="import-status">Rozpoznávám nápoje z obrázku…</div>';
+    document.getElementById('importActions').style.display = 'none';
+  }
+
+  function showImportError(msg) {
+    openImportOverlay();
+    document.getElementById('importTitle').textContent = 'Chyba';
+    document.getElementById('importBody').innerHTML = `<div class="import-status" style="color:var(--red);padding:16px 0">${escHtml(msg)}</div>`;
+    document.getElementById('importActions').style.display = 'flex';
+    document.getElementById('btnImportConfirm').style.display = 'none';
+  }
+
+  function showImportResults(items) {
+    document.getElementById('importTitle').textContent = `Nalezeno ${items.length} nápojů`;
+    const list = document.createElement('div');
+    list.className = 'import-list';
+    items.forEach((item, i) => {
+      const row = document.createElement('label');
+      row.className = 'import-item checked';
+      row.innerHTML = `
+        <input type="checkbox" checked data-idx="${i}" />
+        <span class="import-item-name">${escHtml(item.name)}</span>
+        <span class="import-item-price">${item.price}\u00a0Kč</span>`;
+      row.querySelector('input').addEventListener('change', e => {
+        row.classList.toggle('checked', e.target.checked);
+      });
+      list.appendChild(row);
+    });
+    document.getElementById('importBody').innerHTML = '';
+    document.getElementById('importBody').appendChild(list);
+    document.getElementById('importActions').style.display = 'flex';
+    document.getElementById('btnImportConfirm').style.display = '';
+    document.getElementById('btnImportConfirm').onclick = () => {
+      list.querySelectorAll('input[type=checkbox]:checked').forEach(cb => {
+        const item = items[parseInt(cb.dataset.idx)];
+        addDrink(item.name, item.price);
+      });
+      closeImportOverlay();
+    };
+  }
+
   // ─── EVENTS ──────────────────────────────────────────────
   const inputNewName  = document.getElementById('inputNewDrinkName');
   const inputNewPrice = document.getElementById('inputNewDrinkPrice');
@@ -713,6 +997,24 @@
       addPerson(inputName.value);
       inputName.value = '';
     }
+  });
+
+  // API key init
+  document.getElementById('inputApiKey').value = loadApiKey();
+  document.getElementById('inputApiKey').addEventListener('change', e => saveApiKey(e.target.value));
+
+  // Camera / file scan
+  const fileCapture = document.getElementById('fileCapture');
+  document.getElementById('btnScan').addEventListener('click', () => fileCapture.click());
+  fileCapture.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) { analyzeMenuImage(file); fileCapture.value = ''; }
+  });
+
+  // Import modal close
+  document.getElementById('btnImportCancel').addEventListener('click', closeImportOverlay);
+  document.getElementById('importOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('importOverlay')) closeImportOverlay();
   });
 
   const modalOverlay = document.getElementById('modalOverlay');
