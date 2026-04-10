@@ -48,4 +48,37 @@ Stav se ukládá do `localStorage` pod klíčem `beerboard_v2`.
 Service worker vyžaduje HTTP/HTTPS — nelze spustit přes `file://`.
 
 **Lokálně:** VS Code Live Server → `http://localhost:5500`  
-**Sdílení:** Netlify Drop (přetáhnout složku na netlify.com/drop)
+**Produkce:** https://deadbodycz.github.io/beer-board
+
+---
+
+## 🎯 KONTEXT PROJEKTU
+
+Webová PWA aplikace pro sledování počtu vypitých nápojů pro skupinu lidí.
+
+**URL:** https://deadbodycz.github.io/beer-board  
+**Cílová skupina:** Návštěvníci hospod a restaurací, kteří chtějí mít přehled o tom, kolik toho vypili.  
+**Klíčový princip:** Mobile-first. Uživatelé jsou v hospodě s telefonem v ruce.
+
+## 🚀 GIT WORKFLOW
+
+**Po každé změně kódu vždy automaticky:**
+udělej zálohu
+
+```bash
+git add -A
+git commit -m "stručný popis změny v češtině"
+git push
+```
+
+**Pravidla:**
+- **NIKDY nečekej na pokyn k pushnutí** — push prováděj automaticky po dokončení každé úpravy
+- Commit message piš česky, stručně a výstižně
+- Po úspěšném push oznam uživateli, že změny jsou na GitHubu
+
+## 📝 OBECNÉ POKYNY
+
+- **Jazyk UI:** čeština, české chybové hlášky a toasty
+- **Datum:** DD.MM.YYYY (česká konvence)
+- **Timezone:** Europe/Prague
+- **Pokud narazíš na nejasnost:** rozhodni se sám a pokračuj
